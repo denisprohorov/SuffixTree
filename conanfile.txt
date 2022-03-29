@@ -1,0 +1,6 @@
+[requires]
+
+seqan/2.4.0
+
+[generators]
+cmake
