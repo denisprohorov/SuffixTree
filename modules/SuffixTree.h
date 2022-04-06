@@ -20,7 +20,7 @@ public:
 
     SuffixTree(const std::string &baseStr) : base_str(baseStr + END_SYMBOL), head(new Node(0, 0)) { init(); }
 
-    void get_all_suffix(std::vector<std::string> &strs, std::shared_ptr<Node> node = nullptr, std::string str = "");
+    void get_all_suffix(std::vector<std::string> &strs, Node *node = nullptr, std::string str = "");
 
     void print_all_suffix(){
         std::vector<std::string> strs;
@@ -29,6 +29,14 @@ public:
         for(const std::string &str : strs){
             std::cout << str << " - " << str.size() << '\n';
         }
+    }
+
+    void print_all_info(){
+        std::cout << "nodes count " << '\n';
+        std::cout << "max depth " << '\n';
+        std::cout << "is correct " << '\n';
+
+
     }
 
     const std::shared_ptr<Node> &getHead() const { return head; }

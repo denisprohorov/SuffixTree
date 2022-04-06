@@ -20,18 +20,20 @@ void SuffixTree::init() {
     }
 }
 
-void SuffixTree::get_all_suffix(std::vector<std::string> &strs, std::shared_ptr<Node> node, std::string str) {
-    if (node == nullptr) node = head;
-    if (node->boys.empty()) {
+void SuffixTree::get_all_suffix(std::vector<std::string> &strs, Node *node, std::string str) {
+    if (node == nullptr) node = head.get();
+    if (node->transitionNodes->is_leaf()) {
         strs.push_back(str);
         return;
     }
-    for (auto boy: node->boys) {
+
+    for (auto it = node->transitionNodes->begin(); it->operator!=(node->transitionNodes->end().operator*()); it->operator++()) {
+        auto &boy = it.get()->operator*();
         std::string tmp = str;
-        for (int i = boy.second->start_index; i < boy.second->end_index; ++i) {
+        for (int i = boy.start_index; i < boy.end_index; ++i) {
             tmp += base_str[i];
         }
-        get_all_suffix(strs, boy.second, tmp);
+        get_all_suffix(strs, &boy, tmp);
     }
-    return;
+
 }
