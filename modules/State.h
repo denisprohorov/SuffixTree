@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nodes/Node.h"
-#include "SuffixTree.h"
+#include <string>
 
 class State {
 public:
@@ -11,8 +11,6 @@ public:
 
 public:
     State(const std::shared_ptr<Node> &node, const std::string &baseStr);
-
-    State(const SuffixTree *tree) : base_str(tree->getBaseStr()), activeNode(tree->getHead()), bias(0){}
 
     bool is_transition(const char symbol) const;
 

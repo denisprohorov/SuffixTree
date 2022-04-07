@@ -3,29 +3,23 @@
 #define NOMINMAX
 #include <Windows.h>
 #include <iostream>
-#include <memory>
 #include <seqan/seq_io.h>
+#include <memory>
 #include <chrono>
 
 
-
-//int main() {
-//
-//    const std::string str = "ilyailyaillayaidlsaif";
-//
-//    SuffixTree tree(str);
-//    tree.print_all_suffix();
-//    return 0;
-//}
-
-constexpr int EXAMPLE_SIZE = 1000;
+constexpr int EXAMPLE_SIZE = 10;
 
 //TODO add templates for alphabet
 //TODO add different realizations
 
+//template class SuffixTree<seqan::Dna>;
 int main()
 {
     seqan::CharString seqFileName = "fill.fastq";
+
+    showAllLettersOfMyAlphabet(seqan::Dna());
+//    return 0;
 
     seqan::SeqFileIn seqFileIn;
     if (!open(seqFileIn, toCString(seqFileName)))
@@ -60,12 +54,12 @@ int main()
     }
     std::cout << dna << std::endl;
 //    auto start = std::chrono::system_clock::now();
-//
-//    SuffixTree tree(dna);
-//
+
+    SuffixTree<seqan::Rna5> tree(dna);
+
 //    auto end = std::chrono::system_clock::now();
 //    std::cout << "time = " << (end - start).count();
-//    tree.print_all_suffix();
+    tree.print_all_suffix();
 
     return 0;
 }
