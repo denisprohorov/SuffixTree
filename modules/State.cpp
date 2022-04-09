@@ -48,32 +48,11 @@ void State::go_by_link() {
         bias = std::min(activeNode->end_index - activeNode->start_index - bias, r - l);
         l += bias;
         if (l < r) {
-            //get transition node
             this->activeNode = activeNode->transitionNodes->get_transition_node(base_str[l]);
             bias = 0;
         }
     }
     return void();
-}
-
-void State::create_vertex(int symbol_index) {
-    if (activeNode->start_index + bias == activeNode->end_index) {
-        activeNode->transitionNodes->create_transition(base_str[symbol_index],
-                                      std::make_shared<Node>(symbol_index, base_str.size(), activeNode));
-    } else {
-        std::shared_ptr<Node> new_vertex = std::make_shared<Node>(activeNode->start_index,
-                                                                  activeNode->start_index + bias, activeNode->parent);
-        activeNode->start_index += bias;
-        new_vertex->parent.lock()->transitionNodes->create_transition(base_str[new_vertex->start_index], new_vertex);
-
-        activeNode->parent = new_vertex;
-        new_vertex->transitionNodes->create_transition(base_str[symbol_index], std::make_shared<Node>(
-               symbol_index, base_str.size(), new_vertex));
-        new_vertex->transitionNodes->create_transition(base_str[activeNode->start_index], activeNode);
-
-        this->bias = new_vertex->end_index - new_vertex->start_index;
-        this->activeNode = std::move(new_vertex);
-    }
 }
 
 void State::go_by_symbol(const char symbol) {

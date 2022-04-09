@@ -22,6 +22,30 @@ public:
         virtual bool operator==(const Iterator &b) = 0;
 
         virtual bool operator!=(const Iterator &b) { return !this->operator==(b); }
+
+        virtual ~Iterator() = default;
+    };
+
+    struct IteratorWrapper{
+    public:
+        std::unique_ptr<Iterator> iterator;
+
+        IteratorWrapper(std::unique_ptr<Iterator> &&iterator) : iterator(std::move(iterator)) {}
+
+        using pointer = Node *;
+        using reference = Node &;
+
+        reference operator*() const { return iterator->operator*();}
+
+        pointer operator->() {return iterator->operator->();}
+
+        Iterator &operator++(int) {return iterator->operator++();}
+
+        Iterator &operator++() {return iterator->operator++();}
+
+        bool operator==(const IteratorWrapper &b) const {return iterator->operator==(*b.iterator);}
+
+        bool operator!=(const IteratorWrapper &b) const { return !this->operator==(b); }
     };
 
     virtual bool has_transition_by_symbol(const char symbol) = 0;
@@ -32,9 +56,11 @@ public:
 
     virtual bool is_leaf() = 0;
 
-    virtual std::unique_ptr<Iterator> begin() = 0;
+    virtual IteratorWrapper begin() = 0;
 
-    virtual std::unique_ptr<Iterator> end() = 0;
+    virtual IteratorWrapper end() = 0;
+
+    virtual ~ChildContainer() = default;
 };
 
 class NodeOnMap : public ChildContainer {
@@ -44,8 +70,10 @@ public:
         It(std::_Tree_iterator<std::_Tree_val<std::_Tree_simple_types<std::pair<const char, std::shared_ptr<Node>>>>> ptr)
                 : m_ptr(std::move(ptr)) {}
 
+        ~It() override = default;
+
         reference operator*() const override {
-            return *m_ptr->second.get();
+            return m_ptr->second.operator*();
         }
 
         pointer operator->() override {
@@ -69,6 +97,8 @@ public:
 
     NodeOnMap() = default;
 
+    ~NodeOnMap() override = default;
+
     bool has_transition_by_symbol(const char symbol) override {
         auto it = boys.find(symbol);
         if (it == boys.end()) {
@@ -89,17 +119,12 @@ public:
         return boys.empty();
     }
 
-    std::unique_ptr<Iterator> begin() override {
-//        std::vector<int> v;
-//        std::map<int, int> m;
-//        auto it = m.begin();
-//        std::input_iterator_tag it = m.begin();
-
-        return std::make_unique<It>(It(boys.begin()));
+    IteratorWrapper begin() override {
+        return {std::make_unique<It>(boys.begin())};
     }
 
-    std::unique_ptr<Iterator> end() override {
-        return std::make_unique<It>(It(boys.end()));
+    IteratorWrapper end() override {
+        return {std::make_unique<It>(boys.end())};
     }
 
 };
@@ -112,6 +137,7 @@ public:
     std::weak_ptr<Node> link = std::shared_ptr<Node>(nullptr);
     int start_index;
     int end_index;
+    bool isSuffixNode = false;
     std::unique_ptr<ChildContainer> transitionNodes;
 
     Node(int startIndex, int endIndex, std::weak_ptr<Node> parent = std::shared_ptr<Node>(nullptr)) :

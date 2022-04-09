@@ -40,11 +40,20 @@ private:
                 state->go_by_symbol(base_str[i]);
             }
         }
+        //form end vertexes
+        while (true) {
+            state->set_vertex_final();
+            if (state->activeNode->end_index == 0) {
+                break;
+            }
+            state->go_by_link();
+        }
+
     }
 
 public:
 
-    SuffixTree(const std::string &baseStr) : base_str(baseStr + END_SYMBOL), head(new Node(0, 0)) {
+    SuffixTree(const std::string &baseStr) : base_str(baseStr), head(new Node(0, 0)) {
         init();
         for (TSize i = 0; i < alphSize; ++i)
             std::cout << static_cast<unsigned>(i) << ',' << TAlphabet(i) << "  ";
@@ -57,10 +66,10 @@ public:
             strs.push_back(str);
             return;
         }
-
-        for (auto it = node->transitionNodes->begin(); it->operator!=(
-                node->transitionNodes->end().operator*()); it->operator++()) {
-            auto &boy = it.get()->operator*();
+        if(node->isSuffixNode){
+            strs.push_back(str);
+        }
+        for(auto &boy : *node->transitionNodes){
             std::string tmp = str;
             for (int i = boy.start_index; i < boy.end_index; ++i) {
                 tmp += base_str[i];

@@ -34,7 +34,7 @@ int main()
 
     try
     {
-        readRecords(ids, seqs, quals, seqFileIn);
+        readRecords(ids, seqs, quals, seqFileIn, 10);
     }
     catch (seqan::Exception const & e)
     {
