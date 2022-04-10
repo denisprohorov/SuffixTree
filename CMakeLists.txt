@@ -17,3 +17,22 @@ add_executable(${PROJECT_NAME} main.cpp ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/modules) # need for include project files
+
+file(GLOB_RECURSE resources "resources/*.*")# collect all resources
+foreach (resources ${resources})
+    get_filename_component(filename ${resources} NAME)
+    get_filename_component(dir ${resources} DIRECTORY)
+    get_filename_component(dirname ${dir} NAME)
+
+    set(output "")
+
+    while (NOT ${dirname} STREQUAL resources)
+        get_filename_component(path_component ${dir} NAME)
+        set(output "${path_component}/${output}")
+        get_filename_component(dir ${dir} DIRECTORY)
+        get_filename_component(dirname ${dir} NAME)
+    endwhile ()
+
+    set(output "${CMAKE_CURRENT_BINARY_DIR}/bin/resources/${output}${filename}")
+    configure_file(${resources} ${output} COPYONLY)
+endforeach ()

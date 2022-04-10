@@ -1,9 +1,8 @@
 #pragma once
 
-#include "nodes/Node.h"
+#include "Node.cpp"
 
 #define NOMINMAX
-
 #include <Windows.h>
 
 #include <seqan/seq_io.h>
@@ -21,12 +20,12 @@ class SuffixTree {
 private:
     typedef typename seqan::ValueSize<TAlphabet>::Type TSize;
     TSize alphSize = seqan::ValueSize<TAlphabet>::VALUE;
-    std::string base_str;
-    std::shared_ptr<Node> head;
+    seqan::String<TAlphabet> base_str;
+    std::shared_ptr<Node<TAlphabet>> head;
 
     void init() {
-        std::shared_ptr<State> state(new State(head, base_str));
-        for (int i = 0; i < base_str.length(); ++i) {
+        std::shared_ptr<State<TAlphabet>> state(std::make_shared<State<TAlphabet>>(head, base_str));
+        for (int i = 0; i < seqan::length(base_str); ++i) {
             bool is_empty_string = false;
             while (!state->is_transition(base_str[i])) {
                 state->create_vertex(i);
@@ -53,14 +52,14 @@ private:
 
 public:
 
-    SuffixTree(const std::string &baseStr) : base_str(baseStr), head(new Node(0, 0)) {
+    SuffixTree(const seqan::String<TAlphabet> &baseStr) : base_str(baseStr), head(std::make_shared<Node<TAlphabet>>(0, 0)) {
         init();
         for (TSize i = 0; i < alphSize; ++i)
             std::cout << static_cast<unsigned>(i) << ',' << TAlphabet(i) << "  ";
         std::cout << std::endl;
     }
 
-    void get_all_suffix(std::vector<std::string> &strs, Node *node = nullptr, std::string str = "") {
+    void get_all_suffix(std::vector<std::string> &strs, Node<TAlphabet> *node = nullptr, std::string str = "") {
         if (node == nullptr) node = head.get();
         if (node->transitionNodes->is_leaf()) {
             strs.push_back(str);
@@ -69,6 +68,7 @@ public:
         if(node->isSuffixNode){
             strs.push_back(str);
         }
+
         for(auto &boy : *node->transitionNodes){
             std::string tmp = str;
             for (int i = boy.start_index; i < boy.end_index; ++i) {
@@ -97,25 +97,7 @@ public:
 
     }
 
-    const std::shared_ptr<Node> &getHead() const { return head; }
+    const std::shared_ptr<Node<TAlphabet>> &getHead() const { return head; }
 
-    const std::string &getBaseStr() const { return base_str; }
+    const seqan::String<TAlphabet> &getBaseStr() const { return base_str; }
 };
-
-
-template<typename TAlphabet>
-void showAllLettersOfMyAlphabet(TAlphabet const &);
-
-template<typename TAlphabet>
-void showAllLettersOfMyAlphabet(const TAlphabet &) {
-    typedef typename seqan::ValueSize<TAlphabet>::Type TSize;
-    // We need to determine the alphabet size
-    // using the metafunction ValueSize
-    TSize alphSize = seqan::ValueSize<TAlphabet>::VALUE;
-    // We iterate over all characters of the alphabet
-    // and output them
-    for (TSize i = 0; i < alphSize; ++i)
-        std::cout << static_cast<unsigned>(i) << ',' << TAlphabet(i) << "  ";
-    std::cout << std::endl;
-
-}

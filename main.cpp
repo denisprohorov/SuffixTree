@@ -2,24 +2,20 @@
 
 #define NOMINMAX
 #include <Windows.h>
-#include <iostream>
 #include <seqan/seq_io.h>
+
+#include <iostream>
+#include "Tasks.h"
 #include <memory>
 #include <chrono>
 
 
-constexpr int EXAMPLE_SIZE = 10;
+constexpr int EXAMPLE_SIZE = 100000;
 
-//TODO add templates for alphabet
-//TODO add different realizations
-
-//template class SuffixTree<seqan::Dna>;
 int main()
 {
-    seqan::CharString seqFileName = "fill.fastq";
-
-    showAllLettersOfMyAlphabet(seqan::Dna());
-//    return 0;
+    seqan::CharString seqFileName = "./resources/fill.fastq";
+    typedef seqan::Dna TAlphabet;
 
     seqan::SeqFileIn seqFileIn;
     if (!open(seqFileIn, toCString(seqFileName)))
@@ -34,7 +30,7 @@ int main()
 
     try
     {
-        readRecords(ids, seqs, quals, seqFileIn, 10);
+        readRecords(ids, seqs, quals, seqFileIn, EXAMPLE_SIZE);
     }
     catch (seqan::Exception const & e)
     {
@@ -43,23 +39,25 @@ int main()
     }
 
     std::cout << "size = " << length(ids) << std::endl;
-    seqan::CharString str;
-    for (unsigned i = 0; i < length(ids); ++i) {
-        seqan::append(str, seqs[i]);
+    seqan::String<TAlphabet > dna;
+    for (unsigned i = 0; i < std::min((int)length(seqs), EXAMPLE_SIZE); ++i) {
+        seqan::append(dna, seqs[i]);
     }
+    std::cout << "dna.size() = " << length(dna) << std::endl;
 
-    std::string dna;
-    for(int i = 0; i < EXAMPLE_SIZE; ++i) {
-        dna.push_back(str[i]);
-    }
-    std::cout << dna << std::endl;
-//    auto start = std::chrono::system_clock::now();
+//    std::cout << dna << std::endl;
 
-    SuffixTree<seqan::Rna5> tree(dna);
+    auto start = std::chrono::system_clock::now();
 
-//    auto end = std::chrono::system_clock::now();
-//    std::cout << "time = " << (end - start).count();
-    tree.print_all_suffix();
+    seqan::String<TAlphabet> second_string = "AACAGAGAGAGGAGAGAG";
+
+    std:: cout << tasks::contains_index<TAlphabet>(dna, "GG");
+//    std:: cout << tasks::max_common_substring<TAlphabet>(&dna, &second_string);
+//    SuffixTree<seqan::Rna5> tree(dna);
+
+    auto end = std::chrono::system_clock::now();
+    std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s";
+//    tree.print_all_suffix();
 
     return 0;
 }
