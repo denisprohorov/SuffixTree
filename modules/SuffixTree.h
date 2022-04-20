@@ -24,31 +24,32 @@ private:
     std::shared_ptr<Node<TAlphabet>> head;
 
     void init() {
-        std::shared_ptr<State<TAlphabet>> state(std::make_shared<State<TAlphabet>>(head, base_str));
+        State<TAlphabet> state(head, base_str);
         for (int i = 0; i < seqan::length(base_str); ++i) {
             bool is_empty_string = false;
-            while (!state->is_transition(base_str[i])) {
-                state->create_vertex(i);
-                if (state->activeNode->end_index == 0) {
+            while (!state.is_transition(base_str[i])) {
+                state.create_vertex(i);
+                if (state.activeNode->end_index == 0) {
                     is_empty_string = true;
                     break;
                 }
-                state->go_by_link();
+                state.go_by_link();
             }
             if (!is_empty_string) {
-                state->go_by_symbol(base_str[i]);
+                state.go_by_symbol(base_str[i]);
             }
         }
         //form end vertexes
         while (true) {
-            state->set_vertex_final();
-            if (state->activeNode->end_index == 0) {
+            state.set_vertex_final();
+            if (state.activeNode->end_index == 0) {
                 break;
             }
-            state->go_by_link();
+            state.go_by_link();
         }
 
     }
+
 
 public:
 
@@ -93,7 +94,7 @@ public:
         std::cout << "nodes count " << '\n';
         std::cout << "max depth " << '\n';
         std::cout << "is correct " << '\n';
-
+        std::cout << "vertex count by constructor: " << Node<TAlphabet>::total_count << std::endl;
 
     }
 

@@ -28,11 +28,16 @@ public:
     std::unique_ptr<ChildContainer<TAlphabet>> transitionNodes;
 
 
+    static int total_count;
+
     Node(int startIndex, int endIndex, std::weak_ptr<Node> parent = std::shared_ptr<Node>(nullptr)) :
             parent(std::move(parent)), start_index(startIndex), end_index(endIndex),
-            transitionNodes(std::make_unique<NodeOnArray<TAlphabet>>()) {}
-//            transitionNodes(std::make_unique<NodeOnMap<TAlphabet>>()) {}
+//            transitionNodes(std::make_unique<NodeOnArray<TAlphabet>>()) {}
+            transitionNodes(std::make_unique<NodeOnMap<TAlphabet>>()) { ++total_count;}
 };
+
+template<typename TAlphabet>
+int Node<TAlphabet>::total_count = 0;
 
 template<typename TAlphabet>
 class ChildContainer {

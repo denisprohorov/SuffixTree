@@ -15,6 +15,7 @@ namespace tasks {
                 return -1;
             }
         }
+        std::cerr << "end\n";
         return state.activeNode->start_index + state.bias - seqan::length(find_string);
     }
 
