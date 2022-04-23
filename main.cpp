@@ -13,8 +13,21 @@ int max[73];
 const size_t MAX_MEM = 7e8;
 size_t mpos = 0;
 char mem[MAX_MEM];
-//char *mem = new char[MAX_MEM];
-//char *mem;
+void * operator new ( size_t n ) {
+    max[n]++;
+    char *res = mem + mpos;
+    mpos += n;
+    assert(mpos <= MAX_MEM);
+    return (void *)res;
+}
+inline void operator delete ( void * ) { }
+
+/*
+ * 64
+ * 10**6
+ * 353 mb, 4 alph, 3.5 sec
+ * 233 mb, 26 alph, 2 sec
+ */
 /*
 x64
 16 - 1065653
@@ -27,16 +40,18 @@ x32
 20 - 1065634
 28 - 2131267
 32 - 4
-44 - 1065634*/
-void * operator new ( size_t n ) {
-    max[n]++;
-    char *res = mem + mpos;
-    mpos += n;
-    assert(mpos <= MAX_MEM);
-    return (void *)res;
-}
-inline void operator delete ( void * ) { }
+44 - 1065634
 
+
+4
+edge length : 500021098156
+edge length average : 283732
+
+
+26
+edge length : 65805985026
+edge length average : 61751
+ */
 
 
 constexpr int EXAMPLE_SIZE = 1000000;
@@ -86,11 +101,15 @@ int main()
 
 //    std:: cout << tasks::max_common_substring<TAlphabet>(&dna, &second_string);
 //    std:: cout << tasks::contains_index<TAlphabet>(dna, "GG") << std::endl;
-    SuffixTree<seqan::Rna5> tree(dna);
-    tree.print_all_info();
+    SuffixTree<TAlphabet> tree(dna);
+    std::cout << mpos / 1000000 << " MB" << std::endl;
 
     auto end = std::chrono::system_clock::now();
     std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
+    std::cout << mpos / 1000000 << " MB" << std::endl;
+
+    tree.print_all_info();
+    std::cout << mpos / 1000000 << " MB" << std::endl;
 
     for(int i = 0; i < 73; ++i){
         if(max[i] != 0){
@@ -98,7 +117,8 @@ int main()
         }
     }
 
-    std::cin.get();
+    std::cout << mpos / 1000000 << " MB" << std::endl;
+
 //    tree.print_all_suffix();
 
 

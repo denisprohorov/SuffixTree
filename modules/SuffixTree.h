@@ -20,11 +20,12 @@ class SuffixTree {
 private:
     typedef typename seqan::ValueSize<TAlphabet>::Type TSize;
     TSize alphSize = seqan::ValueSize<TAlphabet>::VALUE;
+
     seqan::String<TAlphabet> base_str;
-    std::shared_ptr<Node<TAlphabet>> head;
+    std::unique_ptr<Node<TAlphabet>> head;
 
     void init() {
-        State<TAlphabet> state(head, base_str);
+        State<TAlphabet> state(head.get(), base_str);
         for (int i = 0; i < seqan::length(base_str); ++i) {
             bool is_empty_string = false;
             while (!state.is_transition(base_str[i])) {
@@ -53,7 +54,7 @@ private:
 
 public:
 
-    SuffixTree(const seqan::String<TAlphabet> &baseStr) : base_str(baseStr), head(std::make_shared<Node<TAlphabet>>(0, 0)) {
+    SuffixTree(const seqan::String<TAlphabet> &baseStr) : base_str(baseStr), head(std::make_unique<Node<TAlphabet>>(0, 0)) {
         init();
         for (TSize i = 0; i < alphSize; ++i)
             std::cout << static_cast<unsigned>(i) << ',' << TAlphabet(i) << "  ";
@@ -90,15 +91,37 @@ public:
         }
     }
 
+    long long edge_length(Node<TAlphabet> *node){
+        long long summ = 0;
+        for(auto& child : *node->transitionNodes){
+            summ += edge_length(&child);
+        }
+        return summ + node->end_index - node->start_index;
+    }
+
+    bool is_correct(){
+        State<TAlphabet> state(this->head.get(), this->base_str);
+        for (auto ch : this->base_str) {
+            state.go_by_symbol(ch);
+        }
+        for (int i = 0; i < seqan::length(this->base_str); ++i) {
+            state.go_by_link();
+        }
+
+        return state.activeNode->parent == nullptr;
+    }
+
+
+
     void print_all_info() {
-        std::cout << "nodes count " << '\n';
-        std::cout << "max depth " << '\n';
-        std::cout << "is correct " << '\n';
+        std::cout << "edge length : " << edge_length(this->head.get()) << '\n';
+//        std::cout <<-- "edge length average : " << edge_length(this->head.get()) / Node<TAlphabet>::total_count << '\n';
+        std::cout << "is correct : " << std::boolalpha << is_correct() << '\n';
         std::cout << "vertex count by constructor: " << Node<TAlphabet>::total_count << std::endl;
 
     }
 
-    const std::shared_ptr<Node<TAlphabet>> &getHead() const { return head; }
+    const Node<TAlphabet>* getHead() const { return head; }
 
     const seqan::String<TAlphabet> &getBaseStr() const { return base_str; }
 };
