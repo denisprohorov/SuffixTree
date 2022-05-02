@@ -7,51 +7,22 @@
 #include <iostream>
 #include "Tasks.h"
 #include <memory>
+
 #include <chrono>
-
-int max[73];
-const size_t MAX_MEM = 7e8;
-size_t mpos = 0;
+constexpr size_t DEBUG_SIZE = 3000;
+int max[DEBUG_SIZE];
+const long long MAX_MEM = 10e8;
+long long mpos = 0;
 char mem[MAX_MEM];
-void * operator new ( size_t n ) {
-    max[n]++;
-    char *res = mem + mpos;
-    mpos += n;
-    assert(mpos <= MAX_MEM);
-    return (void *)res;
-}
-inline void operator delete ( void * ) { }
-
-/*
- * 64
- * 10**6
- * 353 mb, 4 alph, 3.5 sec
- * 233 mb, 26 alph, 2 sec
- */
-/*
-x64
-16 - 1065653
-32 - 4
-40 - 1065634
-56 - 2131267
-72 - 1065634
-x32
- 8 - 1065653
-20 - 1065634
-28 - 2131267
-32 - 4
-44 - 1065634
-
-
-4
-edge length : 500021098156
-edge length average : 283732
-
-
-26
-edge length : 65805985026
-edge length average : 61751
- */
+//void * operator  new ( size_t n ) {
+//    if(n > DEBUG_SIZE) {std::cerr << " n > DEBUG_SIZE in operator new"; throw("can't allocate memory");}
+//    max[n]++;
+//    char *res = mem + mpos;
+//    mpos += n;
+//    assert(mpos <= MAX_MEM);
+//    return (void *)res;
+//}
+//inline void operator delete ( void * ) { }
 
 
 constexpr int EXAMPLE_SIZE = 1000000;
@@ -61,8 +32,9 @@ int main()
 //    mem = new char[MAX_MEM];
     seqan::CharString seqFileName = "./resources/amino.fasta";
 //    seqan::CharString seqFileName = "./resources/fill.fastq";
-    typedef seqan::AminoAcid TAlphabet;
+//    typedef seqan::AminoAcid TAlphabet;
 //    typedef seqan::Dna TAlphabet;
+    typedef char TAlphabet;
 
     seqan::SeqFileIn seqFileIn;
     if (!open(seqFileIn, toCString(seqFileName)))
@@ -111,7 +83,7 @@ int main()
     tree.print_all_info();
     std::cout << mpos / 1000000 << " MB" << std::endl;
 
-    for(int i = 0; i < 73; ++i){
+    for(int i = 0; i < DEBUG_SIZE; ++i){
         if(max[i] != 0){
             std::cout << i << " - " << max[i] << std::endl;
         }
@@ -120,6 +92,9 @@ int main()
     std::cout << mpos / 1000000 << " MB" << std::endl;
 
 //    tree.print_all_suffix();
+//    std::cout << sizeof (tree.getHead()->transitionNodes.get());
+
+    std::cin.get();
 
 
     return 0;

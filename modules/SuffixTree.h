@@ -11,15 +11,43 @@
 #include <iostream>
 #include <algorithm>
 #include "State.h"
+#include "AlphTraits.h"
+
+// первичный шаблон
+// подходит в общем случае - аналог аргументов шаблона по умолчанию
+template <typename T>
+class elem_traits {
+public:
+    typedef const T& arg_type;
+    typedef       T& reference;
+    typedef const T& const_reference;
+};
+
+template <typename T,
+        typename traits = elem_traits<T> > // свойство по умолчанию
+class vector {
+    // ...
+public:
+    typedef T                                value_type;
+    typedef typename traits::arg_type        arg_type;
+    typedef typename traits::reference       reference;
+    typedef typename traits::const_reference const_reference;
+
+    void push_back(arg_type);
+
+    // ...
+};
+
 
 
 const char END_SYMBOL = '$';
 
-template<typename TAlphabet>
+template<typename TAlphabet, typename traits = AlphTraits<TAlphabet>>
 class SuffixTree {
 private:
-    typedef typename seqan::ValueSize<TAlphabet>::Type TSize;
-    TSize alphSize = seqan::ValueSize<TAlphabet>::VALUE;
+
+    typedef typename traits::TSize TSize;
+    TSize alphSize = traits::alphSize;
 
     seqan::String<TAlphabet> base_str;
     std::unique_ptr<Node<TAlphabet>> head;
@@ -73,6 +101,8 @@ public:
 
         for(auto &boy : *node->transitionNodes){
             std::string tmp = str;
+//            tmp.resize(tmp.size() + boy.end_index - boy.start_index);
+//            std::memcpy(&tmp[str.size()], &base_str[boy.start_index], boy.end_index - boy.start_index);
             for (int i = boy.start_index; i < boy.end_index; ++i) {
                 tmp += base_str[i];
             }
@@ -114,7 +144,7 @@ public:
 
 
     void print_all_info() {
-        std::cout << "edge length : " << edge_length(this->head.get()) << '\n';
+//        std::cout << "edge length : " << edge_length(this->head.get()) << '\n';
 //        std::cout <<-- "edge length average : " << edge_length(this->head.get()) / Node<TAlphabet>::total_count << '\n';
         std::cout << "is correct : " << std::boolalpha << is_correct() << '\n';
         std::cout << "vertex count by constructor: " << Node<TAlphabet>::total_count << std::endl;
