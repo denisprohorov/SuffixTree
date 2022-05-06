@@ -1,3 +1,5 @@
+#include "strategy/NodeOnArray.h"
+#include "strategy/NodeOnList.h"
 #include "modules/SuffixTree.h"
 
 #define NOMINMAX
@@ -11,7 +13,7 @@
 #include <chrono>
 constexpr size_t DEBUG_SIZE = 3000;
 int max[DEBUG_SIZE];
-const long long MAX_MEM = 10e8;
+const long long MAX_MEM = 15e8;
 long long mpos = 0;
 char mem[MAX_MEM];
 //void * operator  new ( size_t n ) {
@@ -27,14 +29,15 @@ char mem[MAX_MEM];
 
 constexpr int EXAMPLE_SIZE = 1000000;
 
+
 int main()
 {
 //    mem = new char[MAX_MEM];
     seqan::CharString seqFileName = "./resources/amino.fasta";
 //    seqan::CharString seqFileName = "./resources/fill.fastq";
-//    typedef seqan::AminoAcid TAlphabet;
+    typedef seqan::AminoAcid TAlphabet;
 //    typedef seqan::Dna TAlphabet;
-    typedef char TAlphabet;
+//    typedef char TAlphabet;
 
     seqan::SeqFileIn seqFileIn;
     if (!open(seqFileIn, toCString(seqFileName)))
@@ -73,7 +76,8 @@ int main()
 
 //    std:: cout << tasks::max_common_substring<TAlphabet>(&dna, &second_string);
 //    std:: cout << tasks::contains_index<TAlphabet>(dna, "GG") << std::endl;
-    SuffixTree<TAlphabet> tree(dna);
+//    SuffixTree<TAlphabet, NodeOnArray<TAlphabet>> tree(dna);
+    SuffixTree<TAlphabet, NodeOnList<TAlphabet>> tree(dna);
     std::cout << mpos / 1000000 << " MB" << std::endl;
 
     auto end = std::chrono::system_clock::now();

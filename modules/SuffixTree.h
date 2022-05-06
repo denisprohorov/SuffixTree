@@ -13,47 +13,22 @@
 #include "State.h"
 #include "AlphTraits.h"
 
-// первичный шаблон
-// подходит в общем случае - аналог аргументов шаблона по умолчанию
-template <typename T>
-class elem_traits {
-public:
-    typedef const T& arg_type;
-    typedef       T& reference;
-    typedef const T& const_reference;
-};
-
-template <typename T,
-        typename traits = elem_traits<T> > // свойство по умолчанию
-class vector {
-    // ...
-public:
-    typedef T                                value_type;
-    typedef typename traits::arg_type        arg_type;
-    typedef typename traits::reference       reference;
-    typedef typename traits::const_reference const_reference;
-
-    void push_back(arg_type);
-
-    // ...
-};
-
-
-
 const char END_SYMBOL = '$';
 
-template<typename TAlphabet, typename traits = AlphTraits<TAlphabet>>
+template<typename TAlphabet, class StoreStrategy = NodeOnArray<TAlphabet>, typename traits = AlphTraits<TAlphabet>>
 class SuffixTree {
 private:
 
     typedef typename traits::TSize TSize;
     TSize alphSize = traits::alphSize;
 
+    typedef Node<TAlphabet, StoreStrategy> Node;
+
     seqan::String<TAlphabet> base_str;
-    std::unique_ptr<Node<TAlphabet>> head;
+    std::unique_ptr<Node> head;
 
     void init() {
-        State<TAlphabet> state(head.get(), base_str);
+        State<TAlphabet, StoreStrategy> state(head.get(), base_str);
         for (int i = 0; i < seqan::length(base_str); ++i) {
             bool is_empty_string = false;
             while (!state.is_transition(base_str[i])) {
@@ -82,14 +57,14 @@ private:
 
 public:
 
-    SuffixTree(const seqan::String<TAlphabet> &baseStr) : base_str(baseStr), head(std::make_unique<Node<TAlphabet>>(0, 0)) {
+    SuffixTree(const seqan::String<TAlphabet> &baseStr) : base_str(baseStr), head(std::make_unique<Node>(0, 0)) {
         init();
         for (TSize i = 0; i < alphSize; ++i)
             std::cout << static_cast<unsigned>(i) << ',' << TAlphabet(i) << "  ";
         std::cout << std::endl;
     }
 
-    void get_all_suffix(std::vector<std::string> &strs, Node<TAlphabet> *node = nullptr, std::string str = "") {
+    void get_all_suffix(std::vector<std::string> &strs, Node *node = nullptr, std::string str = "") {
         if (node == nullptr) node = head.get();
         if (node->transitionNodes->is_leaf()) {
             strs.push_back(str);
@@ -121,7 +96,7 @@ public:
         }
     }
 
-    long long edge_length(Node<TAlphabet> *node){
+    long long edge_length(Node *node){
         long long summ = 0;
         for(auto& child : *node->transitionNodes){
             summ += edge_length(&child);
@@ -130,7 +105,7 @@ public:
     }
 
     bool is_correct(){
-        State<TAlphabet> state(this->head.get(), this->base_str);
+        State<TAlphabet, StoreStrategy> state(this->head.get(), this->base_str);
         for (auto ch : this->base_str) {
             state.go_by_symbol(ch);
         }
@@ -145,13 +120,13 @@ public:
 
     void print_all_info() {
 //        std::cout << "edge length : " << edge_length(this->head.get()) << '\n';
-//        std::cout <<-- "edge length average : " << edge_length(this->head.get()) / Node<TAlphabet>::total_count << '\n';
+//        std::cout <<-- "edge length average : " << edge_length(this->head.get()) / NodeDef<TAlphabet>::total_count << '\n';
         std::cout << "is correct : " << std::boolalpha << is_correct() << '\n';
-        std::cout << "vertex count by constructor: " << Node<TAlphabet>::total_count << std::endl;
+        std::cout << "vertex count by constructor: " << Node::total_count << std::endl;
 
     }
 
-    const Node<TAlphabet>* getHead() const { return head; }
+    const Node* getHead() const { return head; }
 
     const seqan::String<TAlphabet> &getBaseStr() const { return base_str; }
 };

@@ -7,17 +7,20 @@
 #include <Windows.h>
 #include <seqan/seq_io.h>
 
-template<typename TAlphabet>
+
+template<typename TAlphabet, class StoreStrategy>
 class State {
 public:
+    typedef Node<TAlphabet, StoreStrategy> NodeDef;
+
     const seqan::String<TAlphabet> &base_str;
-    Node<TAlphabet> *activeNode;
+    NodeDef *activeNode;
     int bias;
 
 public:
-    State(Node<TAlphabet> *active_node, const seqan::String<TAlphabet> &baseStr) : activeNode(active_node),
-                                                                                   base_str(baseStr),
-                                                                                   bias(0) {}
+    State(NodeDef *active_node, const seqan::String<TAlphabet> &baseStr) : activeNode(active_node),
+                                                                           base_str(baseStr),
+                                                                           bias(0) {}
 
 
     bool is_transition(const TAlphabet symbol) const {
@@ -32,7 +35,7 @@ public:
         }
     }
 
-    Node<TAlphabet> *get_link(Node<TAlphabet> *node) {
+    NodeDef *get_link(NodeDef *node) {
         if (node->link != nullptr) return node->link;
         int l = node->start_index;
         int r = node->end_index;
@@ -54,7 +57,7 @@ public:
         if (activeNode->parent == nullptr) return;
         int l = activeNode->start_index;
         int r = activeNode->start_index + bias;
-        Node<TAlphabet> *link = get_link(activeNode->parent);
+        NodeDef *link = get_link(activeNode->parent);
         if (link == nullptr) {
             link = activeNode->parent;
             ++l;
@@ -75,23 +78,23 @@ public:
     void create_vertex(int symbol_index) {
         if (activeNode->start_index + bias == activeNode->end_index) {
             activeNode->transitionNodes->create_transition(base_str[symbol_index],
-                                                           std::make_unique<Node<TAlphabet>>(symbol_index,
-                                                                                             seqan::length(base_str),
-                                                                                             activeNode));
+                                                           std::make_unique<NodeDef>(symbol_index,
+                                                                                     seqan::length(base_str),
+                                                                                     activeNode));
         } else {
-            std::unique_ptr<Node<TAlphabet>> old_active = activeNode->parent->transitionNodes->replace_transition(
+            std::unique_ptr<NodeDef> old_active = activeNode->parent->transitionNodes->replace_transition(
                                                                                 base_str[activeNode->start_index],
-                                                                                std::make_unique<Node<TAlphabet>>(
+                                                                                std::make_unique<NodeDef>(
                                                                                         activeNode->start_index,
                                                                                         activeNode->start_index + bias,
                                                                                         activeNode->parent));
-            Node<TAlphabet> *new_vertex = activeNode->parent->transitionNodes->get_transition_node(
+            NodeDef *new_vertex = activeNode->parent->transitionNodes->get_transition_node(
                     base_str[activeNode->start_index]);
 
             activeNode->start_index += bias;
             activeNode->parent = new_vertex;
 
-            new_vertex->transitionNodes->create_transition(base_str[symbol_index], std::make_unique<Node<TAlphabet>>(
+            new_vertex->transitionNodes->create_transition(base_str[symbol_index], std::make_unique<NodeDef>(
                     symbol_index, seqan::length(base_str), new_vertex));
 //            new_vertex->transitionNodes->create_transition(base_str[activeNode->start_index], activeNode);
             new_vertex->transitionNodes->create_transition(base_str[activeNode->start_index],
@@ -108,13 +111,13 @@ public:
         if (activeNode->start_index + bias >= activeNode->end_index) {
             activeNode->isSuffixNode = true;
         } else {
-            std::unique_ptr<Node<TAlphabet>> old_active = activeNode->parent->transitionNodes->replace_transition(
+            std::unique_ptr<NodeDef> old_active = activeNode->parent->transitionNodes->replace_transition(
                     base_str[activeNode->start_index],
-                    std::make_unique<Node<TAlphabet>>(
+                    std::make_unique<NodeDef>(
                             activeNode->start_index,
                             activeNode->start_index + bias,
                             activeNode->parent));
-            Node<TAlphabet> *new_vertex = activeNode->parent->transitionNodes->get_transition_node(
+            NodeDef *new_vertex = activeNode->parent->transitionNodes->get_transition_node(
                     base_str[activeNode->start_index]);
 
             activeNode->start_index += bias;
