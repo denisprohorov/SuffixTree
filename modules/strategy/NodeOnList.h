@@ -1,42 +1,17 @@
 #pragma once
-#include "Node.cpp"
-
+#include "Node.h"
+#include <forward_list>
 
 template<typename TAlphabet>
 class NodeOnList : public ChildContainer<TAlphabet, NodeOnList<TAlphabet>> {
 public:
 
-    std::forward_list<std::pair<TAlphabet, std::unique_ptr<Node<TAlphabet, NodeOnList<TAlphabet>>>>> boys;
+    typedef TAlphabet Key;
+    typedef std::unique_ptr<Node<TAlphabet, NodeOnList<TAlphabet>>> T;
 
-    struct ConcreteIterator : ChildContainer<TAlphabet, NodeOnList<TAlphabet>>::Iterator {
-    public:
-        typedef typename std::forward_list<std::pair<TAlphabet, std::unique_ptr<Node<TAlphabet, NodeOnList<TAlphabet>>>>>::iterator map_iterator;
+    std::forward_list<std::pair<Key, T>, my_allocator<std::pair<Key, T>>> boys;
 
-        ConcreteIterator(map_iterator ptr)
-                : m_ptr(std::move(ptr)) {}
-
-        ~ConcreteIterator() override = default;
-
-        reference operator*() const override {
-            return m_ptr->second.operator*();
-        }
-
-        pointer operator->() override {
-            return m_ptr->second.get();
-        }
-
-        Iterator &operator++() override {
-            m_ptr++;
-            return *this;
-        }
-
-        bool operator==(const Iterator &b) override {
-            return this->m_ptr == ((ConcreteIterator &) b).m_ptr;
-        }
-
-    private:
-        map_iterator m_ptr;
-    };
+    typedef typename std::forward_list<std::pair<TAlphabet, std::unique_ptr<Node<TAlphabet, NodeOnList<TAlphabet>>>>>::iterator iterator;
 
     NodeOnList() = default;
 
@@ -61,10 +36,10 @@ public:
     }
 
     void create_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet, NodeOnList<TAlphabet>>> transition_node) override {
-//        auto it = std::find_if(  boys.begin(),
-//                                 boys.end(),
+//        auto it = std::find_if(  next.begin(),
+//                                 next.end(),
 //                                 [&]( const std::pair<TAlphabet, std::unique_ptr<NodeDef<TAlphabet>>> &v ){ return v.first > symbol; } );
-//        boys.insert(it, {symbol, std::move(transition_node)});
+//        next.insert(it, {symbol, std::move(transition_node)});
         boys.push_front({symbol, std::move(transition_node)});
     }
 
@@ -82,12 +57,11 @@ public:
         return boys.empty();
     }
 
-    IteratorWrapper begin() override {
-        return {std::make_unique<ConcreteIterator>(boys.begin())};
+    iterator begin() {
+        return boys.begin();
     }
 
-    IteratorWrapper end() override {
-        return {std::make_unique<ConcreteIterator>(boys.end())};
+    iterator end() {
+        return boys.end();
     }
-
 };

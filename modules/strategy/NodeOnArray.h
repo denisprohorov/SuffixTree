@@ -1,5 +1,6 @@
 #pragma once
-#include "Node.cpp"
+#include "Node.h"
+
 
 template<typename TAlphabet>
 class NodeOnArray : public ChildContainer<TAlphabet, NodeOnArray<TAlphabet>> {
@@ -7,46 +8,46 @@ public:
     typedef typename seqan::ValueSize<TAlphabet>::Type TSize;
     static const TSize alphSize = seqan::ValueSize<TAlphabet>::VALUE;
 
-    std::array<std::unique_ptr<Node<TAlphabet>>, alphSize> boys;
+    std::array<std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>>, alphSize> boys;
 
-    struct ConcreteIterator : ChildContainer<TAlphabet, NodeOnArray<TAlphabet>>::Iterator {
-    public:
-        typedef typename std::array<std::unique_ptr<Node<TAlphabet>>, alphSize>::iterator arr_iterator;
-
-        ConcreteIterator(arr_iterator ptr) : m_ptr(std::move(ptr)), end_ptr(m_ptr) {}
-
-        ConcreteIterator(arr_iterator ptr, arr_iterator end_ptr) : m_ptr(std::move(ptr)), end_ptr(end_ptr) {find_valid_pointer();}
-
-        ~ConcreteIterator() override = default;
-
-        reference operator*() const override {
-            return *m_ptr.operator*().get();
-        }
-
-        pointer operator->() override {
-            return m_ptr.operator->()->get();
-        }
-
-        Iterator &operator++() override {
-            m_ptr++;
-            find_valid_pointer();
-            return *this;
-        }
-
-        bool operator==(const Iterator &b) override {
-            return this->m_ptr == ((ConcreteIterator &) b).m_ptr;
-        }
-
-    private:
-        arr_iterator m_ptr;
-        arr_iterator end_ptr;
-
-        void find_valid_pointer(){
-            while(m_ptr != end_ptr && m_ptr->get() == nullptr){
-                m_ptr++;
-            }
-        }
-    };
+//    struct iterator {
+//    public:
+//        typedef typename std::array<std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>>, alphSize>::iterator arr_iterator;
+//
+//        iterator(arr_iterator ptr) : m_ptr(std::move(ptr)), end_ptr(m_ptr) {}
+//
+//        iterator(arr_iterator ptr, arr_iterator end_ptr) : m_ptr(std::move(ptr)), end_ptr(end_ptr) {find_valid_pointer();}
+//
+//        ~iterator() = default;
+//
+//        reference operator*() const override {
+//            return *m_ptr.operator*().get();
+//        }
+//
+//        pointer operator->() override {
+//            return m_ptr.operator->()->get();
+//        }
+//
+//        iterator &operator++() override {
+//            m_ptr++;
+//            find_valid_pointer();
+//            return *this;
+//        }
+//
+//        bool operator==(const iterator &b) override {
+//            return this->m_ptr == b.m_ptr;
+//        }
+//
+//    private:
+//        arr_iterator m_ptr;
+//        arr_iterator end_ptr;
+//
+//        void find_valid_pointer(){
+//            while(m_ptr != end_ptr && m_ptr->get() == nullptr){
+//                m_ptr++;
+//            }
+//        }
+//    };
 
     NodeOnArray() = default;
 
@@ -54,23 +55,20 @@ public:
 
     bool has_transition_by_symbol(const TAlphabet symbol) override {
         auto &node = boys[symbol];
-        if (node == nullptr) {
-            return false;
-        }
-        return true;
+        return node != nullptr;
     }
 
-    Node<TAlphabet> *get_transition_node(const TAlphabet symbol) override {
+    Node<TAlphabet, NodeOnArray<TAlphabet>> *get_transition_node(const TAlphabet symbol) override {
         return boys[symbol].get();
     }
 
-    void create_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet>> transition_node) override {
+    void create_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>> transition_node) override {
         boys[symbol] = std::move(transition_node);
     }
 
-    std::unique_ptr<Node<TAlphabet>>
-    replace_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet>> transition_node) override {
-        std::unique_ptr<Node<TAlphabet>> old_transition = std::move(boys[symbol]);
+    std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>>
+    replace_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>> transition_node) override {
+        std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>> old_transition = std::move(boys[symbol]);
         create_transition(symbol, std::move(transition_node));
         return old_transition;
     }
@@ -82,12 +80,12 @@ public:
         return true;
     }
 
-    IteratorWrapper begin() override {
-        return {std::make_unique<ConcreteIterator>(boys.begin(), boys.end())};
-    }
-
-    IteratorWrapper end() override {
-        return {std::make_unique<ConcreteIterator>(boys.end())};
-    }
+//    iterator begin() override {
+//        return {(boys.begin(), boys.end())};
+//    }
+//
+//    iterator end() override {
+//        return {(boys.end())};
+//    }
 
 };

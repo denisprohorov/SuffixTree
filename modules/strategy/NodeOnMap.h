@@ -1,39 +1,18 @@
 #pragma once
-#include "Node.cpp"
+#include "Node.h"
+#include <map>
+
+
 
 template<typename TAlphabet>
-class NodeOnMap : public ChildContainer<TAlphabet> {
+class NodeOnMap : public ChildContainer<TAlphabet, NodeOnMap<TAlphabet>> {
 public:
+    typedef TAlphabet Key;
+    typedef std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>> T;
 
-    struct ConcreteIterator : ChildContainer<TAlphabet>::Iterator {
-    public:
-        ConcreteIterator(typename std::map<TAlphabet, std::unique_ptr<Node<TAlphabet>>>::iterator ptr)
-        : m_ptr(std::move(ptr)) {}
+    std::map<const Key, T, std::less<Key>, my_allocator<std::pair<const Key, T>>> boys;
 
-        ~ConcreteIterator() override = default;
-
-        reference operator*() const override {
-            return m_ptr->second.operator*();
-        }
-
-        pointer operator->() override {
-            return m_ptr->second.get();
-        }
-
-        Iterator &operator++() override {
-            m_ptr++;
-            return *this;
-        }
-
-        bool operator==(const Iterator &b) override {
-            return this->m_ptr == ((ConcreteIterator &) b).m_ptr;
-        }
-
-    private:
-        typename std::map<TAlphabet, std::unique_ptr<Node<TAlphabet>>>::iterator m_ptr;
-    };
-
-    std::map<const TAlphabet, std::unique_ptr<Node<TAlphabet>>, std::less<TAlphabet>, std::allocator<std::pair<const TAlphabet, std::unique_ptr<Node<TAlphabet>>> >> boys;
+    typedef typename std::map<const Key, T, std::less<Key>, my_allocator<std::pair<const Key, T>>>::iterator iterator;
 
     NodeOnMap() = default;
 
@@ -47,18 +26,18 @@ public:
         return true;
     }
 
-    Node<TAlphabet>* get_transition_node(const TAlphabet symbol) override {
+    Node<TAlphabet, NodeOnMap<TAlphabet>>* get_transition_node(const TAlphabet symbol) override {
         return boys[symbol].get();
     }
 
-    void create_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet>> transition_node) override {
+    void create_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>> transition_node) override {
         boys[symbol] = std::move(transition_node);
-//        boys.emplace(symbol, transition_node);
+//        next.emplace(symbol, transition_node);
     }
 
-    std::unique_ptr<Node<TAlphabet>>
-    replace_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet>> transition_node) override {
-        std::unique_ptr<Node<TAlphabet>> old_transition = std::move(boys[symbol]);
+    std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>>
+    replace_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>> transition_node) override {
+        std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>> old_transition = std::move(boys[symbol]);
         create_transition(symbol, std::move(transition_node));
 //        return std::move(old_transition);
         return old_transition;
@@ -68,12 +47,12 @@ public:
         return boys.empty();
     }
 
-    IteratorWrapper begin() override {
-        return {std::make_unique<ConcreteIterator>(boys.begin())};
+    iterator begin() {
+        return boys.begin();
     }
 
-    IteratorWrapper end() override {
-        return {std::make_unique<ConcreteIterator>(boys.end())};
+    iterator end() {
+        return boys.end();
     }
 
 };

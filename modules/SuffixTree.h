@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Node.cpp"
+#include "Node.h"
 
 #define NOMINMAX
 #include <Windows.h>
@@ -12,6 +12,7 @@
 #include <algorithm>
 #include "State.h"
 #include "AlphTraits.h"
+
 
 const char END_SYMBOL = '$';
 
@@ -66,7 +67,7 @@ public:
 
     void get_all_suffix(std::vector<std::string> &strs, Node *node = nullptr, std::string str = "") {
         if (node == nullptr) node = head.get();
-        if (node->transitionNodes->is_leaf()) {
+        if (node->transitionNodes.is_leaf()) {
             strs.push_back(str);
             return;
         }
@@ -74,7 +75,7 @@ public:
             strs.push_back(str);
         }
 
-        for(auto &boy : *node->transitionNodes){
+        for(auto &boy : node->transitionNodes){
             std::string tmp = str;
 //            tmp.resize(tmp.size() + boy.end_index - boy.start_index);
 //            std::memcpy(&tmp[str.size()], &base_str[boy.start_index], boy.end_index - boy.start_index);
@@ -98,7 +99,7 @@ public:
 
     long long edge_length(Node *node){
         long long summ = 0;
-        for(auto& child : *node->transitionNodes){
+        for(auto& child : node->transitionNodes){
             summ += edge_length(&child);
         }
         return summ + node->end_index - node->start_index;
@@ -116,8 +117,6 @@ public:
         return state.activeNode->parent == nullptr;
     }
 
-
-
     void print_all_info() {
 //        std::cout << "edge length : " << edge_length(this->head.get()) << '\n';
 //        std::cout <<-- "edge length average : " << edge_length(this->head.get()) / NodeDef<TAlphabet>::total_count << '\n';
@@ -126,7 +125,7 @@ public:
 
     }
 
-    const Node* getHead() const { return head; }
+    Node* getHead() const { return head.get(); }
 
     const seqan::String<TAlphabet> &getBaseStr() const { return base_str; }
 };
