@@ -2,7 +2,6 @@
 #include "strategy/NodeOnList.h"
 #include "strategy/NodeOnHashMap.h"
 #include "strategy/NodeOnMap.h"
-#include "strategy/MixedStrategy.h"
 #include "modules/SuffixTree.h"
 
 #define NOMINMAX
@@ -33,22 +32,23 @@
 
 constexpr int EXAMPLE_SIZE = 10000000;
 
-//int main(){
-//    std::map<int, char, std::less<>,  my_allocator<long long>> v1;
-//    v1[10] = (53);
-//
-//    for(auto val : v1){
-//        std::cout << val.second << " ";
-//    }
-//}
 
 int main()
 {
+//    typedef Node<char, NodeOnList<char, std::allocator<char>>,  std::allocator<char>> NodeType;
+//    std::vector<NodeType> vvv;
+//    vvv.reserve(100);
+//    std::cout << vvv[99].end_index;
+//    return 0;
+
+
+
     seqan::CharString seqFileName = "./resources/amino.fasta";
 //    seqan::CharString seqFileName = "./resources/fill.fastq";
     typedef seqan::AminoAcid TAlphabet;
 //    typedef seqan::Dna TAlphabet;
 //    typedef char TAlphabet;
+
 
     seqan::SeqFileIn seqFileIn;
     if (!open(seqFileIn, toCString(seqFileName)))
@@ -84,30 +84,39 @@ int main()
     auto end = std::chrono::system_clock::now();
 
     seqan::String<TAlphabet> second_string = "AACAGAGAGAGGAGAGAG";
-    start = std::chrono::system_clock::now();
-    std:: cout << tasks::contains_index<TAlphabet, NodeOnArray<TAlphabet>>(dna, dna);
-    end = std::chrono::system_clock::now();
-    std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
 
     start = std::chrono::system_clock::now();
-    std:: cout << tasks::contains_index<TAlphabet, NodeOnMap<TAlphabet>>(dna, dna);
-    end = std::chrono::system_clock::now();
-    std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
-
-    std:: cout << tasks::contains_index<TAlphabet, NodeOnHashMap<TAlphabet>>(dna, dna);
+//    std:: cout << tasks::contains_index<TAlphabet, NodeOnArray, std::allocator>(dna, dna);
+//    std:: cout << tasks::contains_index<TAlphabet, NodeOnArray, my_allocator>(dna, dna);
     end = std::chrono::system_clock::now();
     std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
 
     start = std::chrono::system_clock::now();
-    std:: cout << tasks::contains_index<TAlphabet, NodeOnList<TAlphabet>>(dna, dna);
+//    std:: cout << tasks::contains_index<TAlphabet, NodeOnMap, std::allocator>(dna, dna);
+//    std:: cout << tasks::contains_index<TAlphabet, NodeOnMap, my_allocator>(dna, dna);
+    end = std::chrono::system_clock::now();
+    std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
+
+    start = std::chrono::system_clock::now();
+//    std:: cout << tasks::contains_index<TAlphabet, NodeOnHashMap, std::allocator>(dna, dna);
+//    std:: cout << tasks::contains_index<TAlphabet, NodeOnHashMap, my_allocator>(dna, dna);
+    end = std::chrono::system_clock::now();
+    std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
+
+    start = std::chrono::system_clock::now();
+//    std:: cout << tasks::contains_index<TAlphabet, NodeOnList, std::allocator>(dna, dna);
+//    std:: cout << tasks::contains_index<TAlphabet, NodeOnList, my_allocator>(dna, dna);
     end = std::chrono::system_clock::now();
     std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
 
 
+
+
+//    SuffixTree<TAlphabet, NodeOnArray, my_allocator> tree(dna);
+//    tree.print_all_suffix();
 //    SuffixTree<TAlphabet, NodeOnArray<TAlphabet>> tree(dna);
-//    SuffixTree<TAlphabet, NodeOnMap<TAlphabet>> tree(dna);
 //    SuffixTree<TAlphabet, NodeOnHashMap<TAlphabet>> tree(dna);
-//    SuffixTree<TAlphabet, NodeOnList<TAlphabet>> tree2(dna);
+//    SuffixTree<TAlphabet, NodeOnList<TAlphabet>> tree(dna);
 
 //    std::cout << mpos / 1000000 << " MB" << std::endl;
 
@@ -115,7 +124,6 @@ int main()
 //    std::cout << mpos / 1000000 << " MB" << std::endl;
 
 //    tree.print_all_info();
-//    tree2.print_all_info();
 //    std::cout << mpos / 1000000 << " MB" << std::endl;
 //
 //    for(int i = 0; i < DEBUG_SIZE; ++i){
@@ -127,7 +135,7 @@ int main()
 
 //    tree.print_all_suffix();
 
-    std::cin.get();
+//    std::cin.get();
 
 
     return 0;

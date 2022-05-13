@@ -3,18 +3,18 @@
 #include <map>
 
 
-
-template<typename TAlphabet>
-class NodeOnMap : public ChildContainer<TAlphabet, NodeOnMap<TAlphabet>> {
+template<typename TAlphabet, class alloc>
+class NodeOnMap : public ChildContainer<TAlphabet, NodeOnMap<TAlphabet, alloc>, alloc> {
 public:
     typedef TAlphabet Key;
-    typedef std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>> T;
+    typedef std::unique_ptr<NodeType> T;
+    typedef typename std::map<const Key, T, std::less<Key>, alloc>::iterator iterator;
 
-    std::map<const Key, T, std::less<Key>, my_allocator<std::pair<const Key, T>>> boys;
 
-    typedef typename std::map<const Key, T, std::less<Key>, my_allocator<std::pair<const Key, T>>>::iterator iterator;
+    std::map<const Key, T, std::less<Key>, alloc> boys;
 
-    NodeOnMap() = default;
+    NodeOnMap(alloc *allocator) : ChildContainer<TAlphabet, NodeOnMap<TAlphabet, alloc>, alloc>(allocator),
+                                  boys(std::map<const Key, T, std::less<Key>, alloc> (*allocator)){}
 
     ~NodeOnMap() override = default;
 
@@ -26,20 +26,18 @@ public:
         return true;
     }
 
-    Node<TAlphabet, NodeOnMap<TAlphabet>>* get_transition_node(const TAlphabet symbol) override {
+    NodeType* get_transition_node(const TAlphabet symbol) override {
         return boys[symbol].get();
     }
 
-    void create_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>> transition_node) override {
+    void create_transition(const TAlphabet symbol, std::unique_ptr<NodeType> transition_node) override {
         boys[symbol] = std::move(transition_node);
-//        next.emplace(symbol, transition_node);
     }
 
-    std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>>
-    replace_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>> transition_node) override {
-        std::unique_ptr<Node<TAlphabet, NodeOnMap<TAlphabet>>> old_transition = std::move(boys[symbol]);
+    std::unique_ptr<NodeType>
+    replace_transition(const TAlphabet symbol, std::unique_ptr<NodeType> transition_node) override {
+        std::unique_ptr<NodeType> old_transition = std::move(boys[symbol]);
         create_transition(symbol, std::move(transition_node));
-//        return std::move(old_transition);
         return old_transition;
     }
 

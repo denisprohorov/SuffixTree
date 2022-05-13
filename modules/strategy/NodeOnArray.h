@@ -2,13 +2,13 @@
 #include "Node.h"
 
 
-template<typename TAlphabet>
-class NodeOnArray : public ChildContainer<TAlphabet, NodeOnArray<TAlphabet>> {
+template<typename TAlphabet, class alloc>
+class NodeOnArray : public ChildContainer<TAlphabet, NodeOnArray<TAlphabet, alloc>, alloc> {
 public:
     typedef typename seqan::ValueSize<TAlphabet>::Type TSize;
     static const TSize alphSize = seqan::ValueSize<TAlphabet>::VALUE;
 
-    std::array<std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>>, alphSize> boys;
+    std::array<std::unique_ptr<NodeType>, alphSize> boys;
 
 //    struct iterator {
 //    public:
@@ -49,7 +49,7 @@ public:
 //        }
 //    };
 
-    NodeOnArray() = default;
+    NodeOnArray(alloc *allocator) : ChildContainer<TAlphabet, NodeOnArray<TAlphabet, alloc>, alloc>(allocator){};
 
     ~NodeOnArray() override = default;
 
@@ -58,17 +58,17 @@ public:
         return node != nullptr;
     }
 
-    Node<TAlphabet, NodeOnArray<TAlphabet>> *get_transition_node(const TAlphabet symbol) override {
+    NodeType *get_transition_node(const TAlphabet symbol) override {
         return boys[symbol].get();
     }
 
-    void create_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>> transition_node) override {
+    void create_transition(const TAlphabet symbol, std::unique_ptr<NodeType> transition_node) override {
         boys[symbol] = std::move(transition_node);
     }
 
-    std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>>
-    replace_transition(const TAlphabet symbol, std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>> transition_node) override {
-        std::unique_ptr<Node<TAlphabet, NodeOnArray<TAlphabet>>> old_transition = std::move(boys[symbol]);
+    std::unique_ptr<NodeType>
+    replace_transition(const TAlphabet symbol, std::unique_ptr<NodeType> transition_node) override {
+        std::unique_ptr<NodeType> old_transition = std::move(boys[symbol]);
         create_transition(symbol, std::move(transition_node));
         return old_transition;
     }

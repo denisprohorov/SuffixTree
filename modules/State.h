@@ -3,26 +3,25 @@
 #include "Node.h"
 
 #define NOMINMAX
-
+#include "strategy/NodeOnMap.h"
 #include <Windows.h>
 #include <seqan/seq_io.h>
 
-
-
-template<typename TAlphabet, class StoreStrategy = NodeOnArray<TAlphabet>>
+template<typename TAlphabet, class StoreStrategy, class alloc>
 class State {
 public:
-    typedef Node<TAlphabet, StoreStrategy> NodeDef;
+    typedef Node<TAlphabet, StoreStrategy, alloc> NodeDef;
 
     const seqan::String<TAlphabet> &base_str;
     NodeDef *activeNode;
     int bias;
 
-public:
-    State(NodeDef *active_node, const seqan::String<TAlphabet> &baseStr) : activeNode(active_node),
-                                                                           base_str(baseStr),
-                                                                           bias(0) {}
+    alloc* allocator;
 
+
+public:
+    State(NodeDef *active_node, const seqan::String<TAlphabet> &baseStr, alloc *allocator = nullptr) : activeNode(active_node),
+                                                                           base_str(baseStr), bias(0), allocator(allocator) {}
 
     bool is_transition(const TAlphabet symbol) const {
         if (activeNode->start_index + bias >= activeNode->end_index) {
@@ -81,6 +80,7 @@ public:
             activeNode->transitionNodes.create_transition(base_str[symbol_index],
                                                            std::make_unique<NodeDef>(symbol_index,
                                                                                      seqan::length(base_str),
+                                                                                     allocator,
                                                                                      activeNode));
         } else {
             std::unique_ptr<NodeDef> old_active = activeNode->parent->transitionNodes.replace_transition(
@@ -88,6 +88,7 @@ public:
                                                                                 std::make_unique<NodeDef>(
                                                                                         activeNode->start_index,
                                                                                         activeNode->start_index + bias,
+                                                                                        allocator,
                                                                                         activeNode->parent));
             NodeDef *new_vertex = activeNode->parent->transitionNodes.get_transition_node(
                     base_str[activeNode->start_index]);
@@ -96,8 +97,7 @@ public:
             activeNode->parent = new_vertex;
 
             new_vertex->transitionNodes.create_transition(base_str[symbol_index], std::make_unique<NodeDef>(
-                    symbol_index, seqan::length(base_str), new_vertex));
-//            new_vertex->transitionNodes.create_transition(base_str[activeNode->start_index], activeNode);
+                    symbol_index, seqan::length(base_str), allocator, new_vertex));
             new_vertex->transitionNodes.create_transition(base_str[activeNode->start_index],
                                                            std::move(old_active));
 
@@ -117,6 +117,7 @@ public:
                     std::make_unique<NodeDef>(
                             activeNode->start_index,
                             activeNode->start_index + bias,
+                            allocator,
                             activeNode->parent));
             NodeDef *new_vertex = activeNode->parent->transitionNodes.get_transition_node(
                     base_str[activeNode->start_index]);

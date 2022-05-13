@@ -14,22 +14,23 @@
 #include "AlphTraits.h"
 
 
-const char END_SYMBOL = '$';
-
-template<typename TAlphabet, class StoreStrategy = NodeOnArray<TAlphabet>, typename traits = AlphTraits<TAlphabet>>
+template<typename TAlphabet, template <class alph, class allocator> class StoreStrategy = NodeOnMap,
+    template <class T> class alloc = std::allocator, typename traits = AlphTraits<TAlphabet>>
 class SuffixTree {
 private:
-
     typedef typename traits::TSize TSize;
     TSize alphSize = traits::alphSize;
+    typedef alloc<char> alloc;
+    typedef StoreStrategy<TAlphabet, alloc> StoreStrategy;
+    typedef Node<TAlphabet, StoreStrategy, alloc> NodeType;
 
-    typedef Node<TAlphabet, StoreStrategy> Node;
 
     seqan::String<TAlphabet> base_str;
-    std::unique_ptr<Node> head;
+    std::unique_ptr<NodeType> head;
+    alloc allocator;
 
     void init() {
-        State<TAlphabet, StoreStrategy> state(head.get(), base_str);
+        State<TAlphabet, StoreStrategy, alloc> state(head.get(), base_str, &allocator);
         for (int i = 0; i < seqan::length(base_str); ++i) {
             bool is_empty_string = false;
             while (!state.is_transition(base_str[i])) {
@@ -52,20 +53,20 @@ private:
             }
             state.go_by_link();
         }
-
     }
 
 
 public:
 
-    SuffixTree(const seqan::String<TAlphabet> &baseStr) : base_str(baseStr), head(std::make_unique<Node>(0, 0)) {
+    SuffixTree(const seqan::String<TAlphabet> &baseStr, alloc allocator = alloc()) : base_str(baseStr), allocator(allocator) {
+        head = (std::make_unique<NodeType>(0, 0, &this->allocator));
         init();
         for (TSize i = 0; i < alphSize; ++i)
             std::cout << static_cast<unsigned>(i) << ',' << TAlphabet(i) << "  ";
         std::cout << std::endl;
     }
 
-    void get_all_suffix(std::vector<std::string> &strs, Node *node = nullptr, std::string str = "") {
+    void get_all_suffix(std::vector<std::string> &strs, NodeType *node = nullptr, std::string str = "") {
         if (node == nullptr) node = head.get();
         if (node->transitionNodes.is_leaf()) {
             strs.push_back(str);
@@ -79,10 +80,10 @@ public:
             std::string tmp = str;
 //            tmp.resize(tmp.size() + boy.end_index - boy.start_index);
 //            std::memcpy(&tmp[str.size()], &base_str[boy.start_index], boy.end_index - boy.start_index);
-            for (int i = boy.start_index; i < boy.end_index; ++i) {
+            for (int i = boy.second->start_index; i < boy.second->end_index; ++i) {
                 tmp += base_str[i];
             }
-            get_all_suffix(strs, &boy, tmp);
+            get_all_suffix(strs, boy.second.get(), tmp);
         }
 
     }
@@ -97,7 +98,7 @@ public:
         }
     }
 
-    long long edge_length(Node *node){
+    long long edge_length(NodeType *node){
         long long summ = 0;
         for(auto& child : node->transitionNodes){
             summ += edge_length(&child);
@@ -106,7 +107,7 @@ public:
     }
 
     bool is_correct(){
-        State<TAlphabet, StoreStrategy> state(this->head.get(), this->base_str);
+        State<TAlphabet, StoreStrategy, alloc> state(this->head.get(), this->base_str);
         for (auto ch : this->base_str) {
             state.go_by_symbol(ch);
         }
@@ -121,11 +122,17 @@ public:
 //        std::cout << "edge length : " << edge_length(this->head.get()) << '\n';
 //        std::cout <<-- "edge length average : " << edge_length(this->head.get()) / NodeDef<TAlphabet>::total_count << '\n';
         std::cout << "is correct : " << std::boolalpha << is_correct() << '\n';
-        std::cout << "vertex count by constructor: " << Node::total_count << std::endl;
+        std::cout << "vertex count by constructor: " << NodeType::total_count << std::endl;
 
     }
 
-    Node* getHead() const { return head.get(); }
+    NodeType* getHead() const { return head.get(); }
 
     const seqan::String<TAlphabet> &getBaseStr() const { return base_str; }
+
+    State<TAlphabet, StoreStrategy, alloc> createState(){return State<TAlphabet, StoreStrategy, alloc>(head.get(), base_str);}
 };
+
+
+
+
