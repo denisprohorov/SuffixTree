@@ -12,8 +12,11 @@ public:
 
     std::unordered_map<Key, T, std::hash<Key>, std::equal_to<Key>, alloc> boys;
 
-    NodeOnHashMap(alloc *allocator) : ChildContainer<TAlphabet, NodeOnHashMap<TAlphabet, alloc>, alloc>(allocator),
-            boys(std::unordered_map<Key, T, std::hash<Key>, std::equal_to<Key>, alloc>(*allocator)){};
+    NodeOnHashMap(void *allocator) : ChildContainer<TAlphabet, NodeOnHashMap<TAlphabet, alloc>, alloc>((alloc *)allocator),
+            boys(std::unordered_map<Key, T, std::hash<Key>, std::equal_to<Key>, alloc>(*(alloc *)allocator)){};
+
+    NodeOnHashMap(NodeOnHashMap &&mov) : ChildContainer<TAlphabet, NodeOnHashMap<TAlphabet, alloc>, alloc>(mov.allocator),
+    boys(std::move(mov.boys)) {}
 
     ~NodeOnHashMap() override = default;
 

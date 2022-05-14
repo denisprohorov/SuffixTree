@@ -11,8 +11,11 @@ public:
 
     std::forward_list<std::pair<Key, T>, alloc> boys;
 
-    NodeOnList(alloc *allocator) : ChildContainer<TAlphabet, NodeOnList<TAlphabet, alloc>, alloc>(allocator),
-            boys(std::forward_list<std::pair<Key, T>, alloc> (*allocator)){};
+    NodeOnList(void *allocator) : ChildContainer<TAlphabet, NodeOnList<TAlphabet, alloc>, alloc>((alloc *)allocator),
+            boys(std::forward_list<std::pair<Key, T>, alloc> (*(alloc *)allocator)){};
+
+    NodeOnList(NodeOnList &&mov) : ChildContainer<TAlphabet, NodeOnList<TAlphabet, alloc>, alloc>(mov.allocator),
+    boys(std::move(mov.boys)) {}
 
     ~NodeOnList() override = default;
 

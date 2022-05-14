@@ -20,14 +20,13 @@ class SuffixTree {
 private:
     typedef typename traits::TSize TSize;
     TSize alphSize = traits::alphSize;
-    typedef alloc<char> alloc;
-    typedef StoreStrategy<TAlphabet, alloc> StoreStrategy;
-    typedef Node<TAlphabet, StoreStrategy, alloc> NodeType;
+    typedef StoreStrategy<TAlphabet, alloc<char>> StoreStrategy;
+    typedef Node<TAlphabet, StoreStrategy> NodeType;
 
 
     seqan::String<TAlphabet> base_str;
     std::unique_ptr<NodeType> head;
-    alloc allocator;
+    alloc<char> allocator;
 
     void init() {
         State<TAlphabet, StoreStrategy, alloc> state(head.get(), base_str, &allocator);
@@ -57,8 +56,11 @@ private:
 
 
 public:
+    virtual ~SuffixTree() {
+        head.release();
+    }
 
-    SuffixTree(const seqan::String<TAlphabet> &baseStr, alloc allocator = alloc()) : base_str(baseStr), allocator(allocator) {
+    SuffixTree(const seqan::String<TAlphabet> &baseStr, alloc<char> allocator = alloc<char>()) : base_str(baseStr), allocator(allocator) {
         head = (std::make_unique<NodeType>(0, 0, &this->allocator));
         init();
         for (TSize i = 0; i < alphSize; ++i)
@@ -78,8 +80,6 @@ public:
 
         for(auto &boy : node->transitionNodes){
             std::string tmp = str;
-//            tmp.resize(tmp.size() + boy.end_index - boy.start_index);
-//            std::memcpy(&tmp[str.size()], &base_str[boy.start_index], boy.end_index - boy.start_index);
             for (int i = boy.second->start_index; i < boy.second->end_index; ++i) {
                 tmp += base_str[i];
             }
@@ -107,7 +107,7 @@ public:
     }
 
     bool is_correct(){
-        State<TAlphabet, StoreStrategy, alloc> state(this->head.get(), this->base_str);
+        auto state = this->createState();
         for (auto ch : this->base_str) {
             state.go_by_symbol(ch);
         }
@@ -130,7 +130,11 @@ public:
 
     const seqan::String<TAlphabet> &getBaseStr() const { return base_str; }
 
-    State<TAlphabet, StoreStrategy, alloc> createState(){return State<TAlphabet, StoreStrategy, alloc>(head.get(), base_str);}
+    State<TAlphabet, StoreStrategy, alloc> createState(){return State<TAlphabet, StoreStrategy, alloc>(head.get(), base_str, &allocator);}
+
+    alloc<char> &getAllocator() {
+        return allocator;
+    }
 };
 
 

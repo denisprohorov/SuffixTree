@@ -13,7 +13,7 @@ namespace tasks {
         SuffixTree<TAlphabet, Strategy, allocator> tree(base);
         end = std::chrono::system_clock::now();
         std::cout << "build time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
-        tree.print_all_info();
+//        tree.print_all_info();
 
         start = std::chrono::system_clock::now();
         auto state = tree.createState();
@@ -29,7 +29,8 @@ namespace tasks {
         }
         end = std::chrono::system_clock::now();
         std::cout << "find time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
-//        std::getchar();
+//        std::cout << tree.getAllocator().mem->mpos_node / 1000000 << "MB" << std::endl;
+        std::getchar();
         return state.activeNode->start_index + state.bias - seqan::length(find_string);
     }
 

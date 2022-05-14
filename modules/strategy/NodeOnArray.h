@@ -49,7 +49,10 @@ public:
 //        }
 //    };
 
-    NodeOnArray(alloc *allocator) : ChildContainer<TAlphabet, NodeOnArray<TAlphabet, alloc>, alloc>(allocator){};
+    NodeOnArray(void *allocator) : ChildContainer<TAlphabet, NodeOnArray<TAlphabet, alloc>, alloc>((alloc *)allocator){};
+
+    NodeOnArray(NodeOnArray &&mov) : ChildContainer<TAlphabet, NodeOnArray<TAlphabet, alloc>, alloc>(mov.allocator),
+    boys(std::move(mov.boys)) {}
 
     ~NodeOnArray() override = default;
 

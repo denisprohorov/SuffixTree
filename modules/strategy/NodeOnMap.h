@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Node.h"
 #include <map>
 
@@ -13,8 +14,11 @@ public:
 
     std::map<const Key, T, std::less<Key>, alloc> boys;
 
-    NodeOnMap(alloc *allocator) : ChildContainer<TAlphabet, NodeOnMap<TAlphabet, alloc>, alloc>(allocator),
-                                  boys(std::map<const Key, T, std::less<Key>, alloc> (*allocator)){}
+    NodeOnMap(void *allocator) : ChildContainer<TAlphabet, NodeOnMap<TAlphabet, alloc>, alloc>((alloc*)allocator),
+                                  boys(std::map<const Key, T, std::less<Key>, alloc>(*(alloc*)allocator)) {}
+
+    NodeOnMap(NodeOnMap &&mov) : ChildContainer<TAlphabet, NodeOnMap<TAlphabet, alloc>, alloc>(mov.allocator),
+                                 boys(std::move(mov.boys)) {}
 
     ~NodeOnMap() override = default;
 
@@ -26,7 +30,7 @@ public:
         return true;
     }
 
-    NodeType* get_transition_node(const TAlphabet symbol) override {
+    NodeType *get_transition_node(const TAlphabet symbol) override {
         return boys[symbol].get();
     }
 
