@@ -15,32 +15,63 @@
 #include <chrono>
 
 
-//constexpr size_t DEBUG_SIZE = 100;
-//int max[DEBUG_SIZE];
-//const long long MAX_MEM = 7e8;
-//long long mpos = 0;
-//char mem[MAX_MEM];
-//void * operator  new ( size_t n ) {
-//    if(n > DEBUG_SIZE) {std::cerr << " n > DEBUG_SIZE in operator new"; throw("can't allocate memory");}
-//    max[n]++;
-//    char *res = mem + mpos;
-//    mpos += n;
-//    assert(mpos <= MAX_MEM);
-//    return (void *)res;
-//}
-//inline void operator delete ( void * ) { }
 
-constexpr int EXAMPLE_SIZE = 1000000;
+template<typename TAlphabet>
+void test(const seqan::String<TAlphabet> &base, const seqan::String<TAlphabet> &find_string, std::string description, float (*foo)(const seqan::String<TAlphabet> &, const seqan::String<TAlphabet> &)){
+    auto start = std::chrono::system_clock::now();
+    auto end = std::chrono::system_clock::now();
+    float time = 0;
+
+    start = std::chrono::system_clock::now();
+    std::cout << description << std::endl;
+
+    time = foo(base, find_string);
+
+    end = std::chrono::system_clock::now();
+    std::cout << "destructor time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. - time << "s" << std::endl;
+    std::cout << "total time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000.<< "s" << std::endl;
+    std::cout << "----------------------------------\n" << std::endl;
+}
+
+
+
+constexpr int EXAMPLE_SIZE = 5000000;
+//constexpr int EXAMPLE_SIZE = 500000;
+//constexpr int EXAMPLE_SIZE = 10000;
+//constexpr int EXAMPLE_SIZE = 10;
+//constexpr int EXAMPLE_SIZE = 1;
+constexpr int size = 26;
+
+template <> struct seqan::ValueSize<char>
+{
+    typedef uint8_t Type;
+    static const Type VALUE = size;
+};
+
 
 
 int main()
 {
+
     seqan::CharString seqFileName = "./resources/amino.fasta";
 //    seqan::CharString seqFileName = "./resources/fill.fastq";
-    typedef seqan::AminoAcid TAlphabet;
+//    typedef seqan::AminoAcid TAlphabet;
 //    typedef seqan::Dna TAlphabet;
-//    typedef char TAlphabet;
+    typedef char TAlphabet;
 
+    std::srand(0);
+    std::string str;
+    for (int i = 0; i < EXAMPLE_SIZE; ++i) {
+        unsigned char symbol = std::rand() % size;
+        str.push_back((TAlphabet)symbol);
+    }
+
+//    std::srand(45989);
+    seqan::String<TAlphabet> max_str;
+    for (int i = 0; i < EXAMPLE_SIZE; ++i) {
+        unsigned char symbol = std::rand() % size;
+        seqan::append(max_str, (TAlphabet) symbol);
+    }
 
     seqan::SeqFileIn seqFileIn;
     if (!open(seqFileIn, toCString(seqFileName)))
@@ -64,48 +95,39 @@ int main()
     }
 
     std::cout << "size = " << length(ids) << std::endl;
-    seqan::String<TAlphabet > dna;
-    for (unsigned i = 0; i < length(seqs)  && seqan::length(dna) < EXAMPLE_SIZE; ++i) {
-        seqan::append(dna, seqs[i]);
-    }
+    seqan::String<TAlphabet> dna(str);
+//    seqan::String<TAlphabet> dna;
+//    for (unsigned i = 0; i < length(seqs)  && seqan::length(dna) < EXAMPLE_SIZE; ++i) {
+//        seqan::append(dna, seqs[i]);
+//    }
     std::cout << "dna.size() = " << length(dna) << std::endl;
-
-//    std::cout << dna << std::endl;
 
     auto start = std::chrono::system_clock::now();
     auto end = std::chrono::system_clock::now();
+    float time = 0;
+    std::cout << "all init" << std::endl;
+//    std::getchar();
 
-    seqan::String<TAlphabet> second_string = "AACAGAGAGAGGAGAGAG";
+//    test(dna, dna, "NodeOnArray alloc 1", tasks::contains_index<TAlphabet, NodeOnArray, std::allocator>);
+//    test(dna, max_str, "NodeOnArray alloc 2", tasks::max_common_substring<TAlphabet, NodeOnArray, std::allocator>);
+//    test(dna, dna, "NodeOnArray my_alloc 1", tasks::contains_index<TAlphabet, NodeOnArray, my_allocator>);
+//    test(dna, max_str, "NodeOnArray my_alloc 2", tasks::max_common_substring<TAlphabet, NodeOnArray, my_allocator>);
 
-    start = std::chrono::system_clock::now();
-    std:: cout << tasks::contains_index<TAlphabet, NodeOnArray, std::allocator>(dna, dna);
-//    std:: cout << tasks::contains_index<TAlphabet, NodeOnArray, my_allocator>(dna, dna);
-    end = std::chrono::system_clock::now();
-    std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
-    std::getchar();
+//    test(dna, dna, "NodeOnList alloc 1", tasks::contains_index<TAlphabet, NodeOnList, std::allocator>);
+//    test(dna, max_str, "NodeOnList alloc 2", tasks::max_common_substring<TAlphabet, NodeOnList, std::allocator>);
+//    test(dna, dna, "NodeOnList my_alloc 1", tasks::contains_index<TAlphabet, NodeOnList, my_allocator>);
+    test(dna, max_str, "NodeOnList my_alloc 2", tasks::max_common_substring<TAlphabet, NodeOnList, my_allocator>);
+//
+//    test(dna, dna, "NodeOnMap alloc 1", tasks::contains_index<TAlphabet, NodeOnMap, std::allocator>);
+//    test(dna, max_str, "NodeOnMap alloc 2", tasks::max_common_substring<TAlphabet, NodeOnMap, std::allocator>);
+//    test(dna, dna, "NodeOnMap my_alloc 1", tasks::contains_index<TAlphabet, NodeOnMap, my_allocator>);
+//    test(dna, max_str, "NodeOnMap my_alloc 2", tasks::max_common_substring<TAlphabet, NodeOnMap, my_allocator>);
+//
+//    test(dna, dna, "NodeOnHashMap alloc 1", tasks::contains_index<TAlphabet, NodeOnHashMap, std::allocator>);
+//    test(dna, max_str, "NodeOnHashMap alloc 2", tasks::max_common_substring<TAlphabet, NodeOnHashMap, std::allocator>);
+//    test(dna, dna, "NodeOnHashMap my_alloc 1", tasks::contains_index<TAlphabet, NodeOnHashMap, my_allocator>);
+//    test(dna, max_str, "NodeOnHashMap my_alloc 2", tasks::max_common_substring<TAlphabet, NodeOnHashMap, my_allocator>);
 
-    start = std::chrono::system_clock::now();
-//    std:: cout << tasks::contains_index<TAlphabet, NodeOnMap, std::allocator>(dna, dna);
-    std:: cout << tasks::contains_index<TAlphabet, NodeOnMap, my_allocator>(dna, dna);
-    end = std::chrono::system_clock::now();
-    std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
-
-    std::getchar();
-
-    start = std::chrono::system_clock::now();
-//    std:: cout << tasks::contains_index<TAlphabet, NodeOnHashMap, std::allocator>(dna, dna);
-    std:: cout << tasks::contains_index<TAlphabet, NodeOnHashMap, my_allocator>(dna, dna);
-    end = std::chrono::system_clock::now();
-    std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
-
-    std::getchar();
-
-    start = std::chrono::system_clock::now();
-//    std:: cout << tasks::contains_index<TAlphabet, NodeOnList, std::allocator>(dna, dna);
-    std:: cout << tasks::contains_index<TAlphabet, NodeOnList, my_allocator>(dna, dna);
-    end = std::chrono::system_clock::now();
-    std::cout << "time = " << (std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()) / 1000. << "s" << std::endl;
-    std::getchar();
 
 
 

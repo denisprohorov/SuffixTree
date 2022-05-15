@@ -9,23 +9,22 @@
 #include <cassert>
 
 struct memory {
-    size_t DEBUG_SIZE_node = 3000;
-    int *max_node = new int[DEBUG_SIZE_node] ();
-    long long MAX_MEM_node = 10e8;
-    long long mpos_node = 0;
-    char *mem_node = new char[MAX_MEM_node];
+    long long MAX_MEM = 50e8;
+    long long mpos = 0;
+    char *mem = new char[MAX_MEM];
 
     ~memory() {
-        delete[] max_node;
-        delete[] mem_node;
+        delete[] mem;
+        std::cout << "delete----------------" << std::endl;
     }
 };
 
 template<class T>
 class my_allocator {
-public:
 
-    std::shared_ptr<memory> mem;
+public:
+    memory *mem;
+    bool isOwner = false;
 
     typedef size_t size_type;
 
@@ -36,32 +35,32 @@ public:
     typedef const T &const_reference;
     typedef T value_type;
 
-    my_allocator() : mem(std::make_shared<memory>()) {}
+    my_allocator() : mem(new memory()), isOwner(true) {}
+
+    my_allocator(my_allocator &&alloc) : mem(alloc.mem), isOwner(alloc.isOwner){alloc.isOwner = false;}
+
+    ~my_allocator() {
+        if(isOwner) delete mem;
+    }
 
     template<class U>
-    my_allocator(const my_allocator<U> &old_alloc) : mem(old_alloc.mem) {}
+    my_allocator(const my_allocator<U> &old_alloc) : mem(old_alloc.mem), isOwner(false) {}
 
-    pointer allocate(size_type number_type, const void * = 0) {
+    pointer allocate(size_type number_type) {
         size_t n = sizeof(T) * number_type;
 
-//        std::cout << n / number_type << std::endl;
-        if (n > mem->DEBUG_SIZE_node) {
-            std::cerr << " n > DEBUG_SIZE_node in operator new";
-            throw ("can't allocate memory");
-        }
-        mem->max_node[n]++;
-        char *res = mem->mem_node + mem->mpos_node;
-        mem->mpos_node += n;
-        assert(mem->mpos_node <= mem->MAX_MEM_node);
+        char *res = mem->mem + mem->mpos;
+        mem->mpos += n;
+        assert(mem->mpos <= mem->MAX_MEM);
         return (pointer) res;
     }
 
     void deallocate(void *p, size_type) {
     }
 
-    void construct (T* p, T&& value){
-        char *data = (char*)&value;
-        std::memcpy(p, data, sizeof(T));
+    template <class _Objty, class... _Types>
+    _CXX17_DEPRECATE_OLD_ALLOCATOR_MEMBERS void construct(_Objty* const _Ptr, _Types&&... _Args) {
+        new (std::_Voidify_iter(_Ptr)) _Objty(std::forward<_Types>(_Args)...);
     }
 
 };
@@ -94,12 +93,12 @@ public:
         return *this;
     }
 
-    static void *operator new(size_t n) {
-        std::cout << "new Node ----------------" << std::endl;
-        return (void *) new char[n];
-    }
-
-    inline void operator delete(void *) {}
+//    static void *operator new(size_t n) {
+//        std::cout << "new Node ----------------" << std::endl;
+//        return (void *) new char[n];
+//    }
+//
+//    inline void operator delete(void *) {}
 
 };
 

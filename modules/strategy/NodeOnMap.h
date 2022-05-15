@@ -12,49 +12,49 @@ public:
     typedef typename std::map<const Key, T, std::less<Key>, alloc>::iterator iterator;
 
 
-    std::map<const Key, T, std::less<Key>, alloc> boys;
+    std::map<const Key, T, std::less<Key>, alloc> nodes;
 
     NodeOnMap(void *allocator) : ChildContainer<TAlphabet, NodeOnMap<TAlphabet, alloc>, alloc>((alloc*)allocator),
-                                  boys(std::map<const Key, T, std::less<Key>, alloc>(*(alloc*)allocator)) {}
+                                 nodes(std::map<const Key, T, std::less<Key>, alloc>(*(alloc*)allocator)) {}
 
     NodeOnMap(NodeOnMap &&mov) : ChildContainer<TAlphabet, NodeOnMap<TAlphabet, alloc>, alloc>(mov.allocator),
-                                 boys(std::move(mov.boys)) {}
+                                 nodes(std::move(mov.nodes)) {}
 
     ~NodeOnMap() override = default;
 
     bool has_transition_by_symbol(const TAlphabet symbol) override {
-        auto it = boys.find(symbol);
-        if (it == boys.end()) {
+        auto it = nodes.find(symbol);
+        if (it == nodes.end()) {
             return false;
         }
         return true;
     }
 
     NodeType *get_transition_node(const TAlphabet symbol) override {
-        return boys[symbol].get();
+        return nodes[symbol].get();
     }
 
     void create_transition(const TAlphabet symbol, std::unique_ptr<NodeType> transition_node) override {
-        boys[symbol] = std::move(transition_node);
+        nodes[symbol] = std::move(transition_node);
     }
 
     std::unique_ptr<NodeType>
     replace_transition(const TAlphabet symbol, std::unique_ptr<NodeType> transition_node) override {
-        std::unique_ptr<NodeType> old_transition = std::move(boys[symbol]);
+        std::unique_ptr<NodeType> old_transition = std::move(nodes[symbol]);
         create_transition(symbol, std::move(transition_node));
         return old_transition;
     }
 
     bool is_leaf() override {
-        return boys.empty();
+        return nodes.empty();
     }
 
     iterator begin() {
-        return boys.begin();
+        return nodes.begin();
     }
 
     iterator end() {
-        return boys.end();
+        return nodes.end();
     }
 
 };
